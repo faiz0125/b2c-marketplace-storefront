@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 
 import { Footer, Header } from '@/components/organisms';
-import { TalkJsProvider } from '@/components/providers/TalkJsProvider';
+import { TalkJsProvider } from '@/components/providers';
 import { retrieveCustomer } from '@/lib/data/customer';
 import { checkRegion } from '@/lib/helpers/check-region';
 
