@@ -5,11 +5,25 @@ import { SellerAvatar } from '../SellerAvatar/SellerAvatar';
 
 export const CartItemsHeader = ({
   seller,
-  parcelNumber
+  parcelNumber,
+  variant = 'default'
 }: {
   seller: SingleProductSeller;
   parcelNumber: number;
+  variant?: 'default' | 'checkout';
 }) => {
+  if (variant === 'checkout') {
+    return (
+      <div className="flex h-[54px] items-center justify-between rounded-sm border bg-component-secondary p-4">
+        <div className="flex items-center gap-1">
+          <span className="label-md text-secondary">Seller:</span>
+          <span className="label-md text-primary">{seller.name}</span>
+        </div>
+        <span className="label-md text-secondary">Parcel {parcelNumber}</span>
+      </div>
+    );
+  }
+
   return (
     <LocalizedClientLink href={`/sellers/${seller.handle}`}>
       <div className="flex items-center justify-between rounded-sm border p-4">

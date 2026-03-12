@@ -33,20 +33,18 @@ export const CartSummary = ({
             })}
           </span>
         </div>
-        {!!shipping_total && (
-          <div
-            className="flex justify-between"
-            data-testid="cart-summary-delivery"
-          >
-            <span>Estimated delivery:</span>
-            <span className="text-primary">
-              {convertToLocale({
-                amount: shipping_total,
-                currency_code
-              })}
-            </span>
-          </div>
-        )}
+        <div
+          className="flex justify-between"
+          data-testid="cart-summary-delivery"
+        >
+          <span>Delivery:</span>
+          <span className="text-primary">
+            {convertToLocale({
+              amount: shipping_total,
+              currency_code
+            })}
+          </span>
+        </div>
         {!!tax && (
           <div
             className="flex justify-between"

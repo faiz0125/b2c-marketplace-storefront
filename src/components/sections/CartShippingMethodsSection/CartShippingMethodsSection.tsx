@@ -3,14 +3,15 @@
 import { Fragment, useEffect, useState, useTransition, type FC } from 'react';
 
 import { Listbox, Transition } from '@headlessui/react';
-import { CheckCircleSolid, ChevronUpDown, Loader } from '@medusajs/icons';
+import { ChevronUpDown, Loader } from '@medusajs/icons';
 import type { HttpTypes } from '@medusajs/types';
-import { clx, Heading, Text } from '@medusajs/ui';
+import { clx, Heading } from '@medusajs/ui';
 import clsx from 'clsx';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import { Button } from '@/components/atoms';
 import ErrorMessage from '@/components/molecules/ErrorMessage/ErrorMessage';
+import { TickThinIcon } from '@/icons';
 import { removeShippingMethod, setShippingMethod } from '@/lib/data/cart';
 import { calculatePriceForShippingOption } from '@/lib/data/fulfillment';
 import { convertToLocale } from '@/lib/helpers/money';
@@ -165,34 +166,38 @@ const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShipping
     router.replace(pathname + '?step=delivery');
   };
   const isEditEnabled = !isOpen && !!cart?.shipping_methods?.length;
+  const hasShipping = (cart.shipping_methods?.length ?? 0) > 0;
+  const isDeliveryPending = !isOpen && !hasShipping;
+  const isDeliveryCompleted = !isOpen && hasShipping;
 
   const filteredGroupedBySellerId = Object.keys(groupedBySellerId || {}).filter(
     key => groupedBySellerId?.[key]?.[0]?.seller_name
   );
 
   return (
-    <div className="bg-ui-bg-interactive rounded-sm border p-4">
-      <div className="mb-6 flex flex-row items-center justify-between">
-        <Heading
-          level="h2"
-          className="text-3xl-regular flex flex-row items-baseline gap-x-2"
-        >
-          {!isOpen && (cart.shipping_methods?.length ?? 0) > 0 && <CheckCircleSolid />}
-          Delivery
-        </Heading>
+    <div className="overflow-hidden rounded-lg border">
+      <div className="flex items-center justify-between bg-component-secondary p-4">
+        <div className="flex items-center gap-2">
+          {isDeliveryCompleted ? (
+            <span className="flex w-10 shrink-0 justify-center">
+              <TickThinIcon size={24} />
+            </span>
+          ) : (
+            <span className="heading-md w-10 shrink-0 text-center text-primary">2</span>
+          )}
+          <span className="heading-md uppercase text-primary">DELIVERY</span>
+        </div>
         {isEditEnabled && (
-          <Text>
-            <Button
-              onClick={handleEdit}
-              variant="tonal"
-            >
-              Edit
-            </Button>
-          </Text>
+          <Button
+            onClick={handleEdit}
+            variant="tonal"
+          >
+            EDIT
+          </Button>
         )}
       </div>
       {isOpen ? (
-        <>
+        <div className="border-t border-primary p-4">
           <div className="grid">
             <div data-testid="delivery-options-container">
               <div className="pb-8 pt-2 md:pt-0">
@@ -295,38 +300,36 @@ const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShipping
             />
             <Button
               onClick={handleSubmit}
-              variant="tonal"
+              variant="filled"
               disabled={!cart.shipping_methods?.[0] || isPendingDeleteRow}
               loading={isLoadingPrices}
             >
               Continue to payment
             </Button>
           </div>
-        </>
-      ) : (
-        <div>
-          <div className="text-small-regular">
-            {cart && (cart.shipping_methods?.length ?? 0) > 0 && (
-              <div className="flex flex-col">
-                {cart.shipping_methods?.map(method => (
-                  <div
-                    key={method.id}
-                    className="mb-4 rounded-md border p-4"
-                  >
-                    <Text className="txt-medium-plus text-ui-fg-base mb-1">Method</Text>
-                    <Text className="txt-medium text-ui-fg-subtle">
-                      {method.name}{' '}
-                      {convertToLocale({
-                        amount: method.amount!,
-                        currency_code: cart?.currency_code
-                      })}
-                    </Text>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
+      ) : (
+        (cart.shipping_methods?.length ?? 0) > 0 && (
+          <div className="border-t border-primary p-4">
+            <div className="text-small-regular flex flex-col">
+              {cart.shipping_methods?.map(method => (
+                <div
+                  key={method.id}
+                  className="mb-4 rounded-md border p-4"
+                >
+                  <p className="label-md mb-1 font-bold">Method</p>
+                  <p className="label-md text-secondary">
+                    {method.name}{' '}
+                    {convertToLocale({
+                      amount: method.amount!,
+                      currency_code: cart?.currency_code
+                    })}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
       )}
     </div>
   );

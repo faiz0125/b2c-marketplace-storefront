@@ -14,6 +14,7 @@ export const CartItemsProducts = ({
   currency_code,
   delete_item = true,
   change_quantity = true,
+  compact = false,
   user,
   wishlist
 }: {
@@ -21,6 +22,7 @@ export const CartItemsProducts = ({
   currency_code: string;
   delete_item?: boolean;
   change_quantity?: boolean;
+  compact?: boolean;
   user?: HttpTypes.StoreCustomer | null;
   wishlist?: Wishlist;
 }) => {
@@ -44,6 +46,61 @@ export const CartItemsProducts = ({
           amount: originalTotal,
           currency_code
         });
+
+        if (compact) {
+          return (
+            <div
+              key={product.id}
+              data-testid={`cart-item-${product.id}`}
+              className="flex items-center gap-4"
+            >
+              <LocalizedClientLink href={`/products/${product.product_handle}`}>
+                <div
+                  className="h-[80px] w-[56px] shrink-0"
+                  data-testid="cart-item-image"
+                >
+                  {product.thumbnail ? (
+                    <Image
+                      src={decodeURIComponent(product.thumbnail)}
+                      alt="Product thumbnail"
+                      width={56}
+                      height={80}
+                      className="h-[80px] w-[56px] rounded-[6px] object-cover"
+                    />
+                  ) : (
+                    <Image
+                      src={'/images/placeholder.svg'}
+                      alt="Product thumbnail"
+                      width={56}
+                      height={80}
+                      className="h-[80px] w-[56px] rounded-[6px] object-cover opacity-30"
+                    />
+                  )}
+                </div>
+              </LocalizedClientLink>
+              <div className="flex min-w-0 flex-1 items-center justify-between">
+                <div className="flex min-w-0 flex-col">
+                  {vendor && <p className="label-md text-secondary">{vendor}</p>}
+                  <h3
+                    className="heading-xs truncate text-primary"
+                    data-testid="cart-item-title"
+                  >
+                    {product.product_title}
+                  </h3>
+                </div>
+                <div
+                  className="shrink-0 text-right"
+                  data-testid="cart-item-price"
+                >
+                  {hasDiscount && (
+                    <p className="label-md text-secondary line-through">{originalPrice}</p>
+                  )}
+                  <p className="label-lg text-primary">{total}</p>
+                </div>
+              </div>
+            </div>
+          );
+        }
 
         return (
           <div

@@ -1,84 +1,95 @@
-"use client"
+'use client';
 
-import { Heading, Text, useToggleState } from "@medusajs/ui"
-import { setAddresses } from "@/lib/data/cart"
-import compareAddresses from "@/lib/helpers/compare-addresses"
-import { HttpTypes } from "@medusajs/types"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useActionState, useEffect } from "react"
-import { Button } from "@/components/atoms"
-import ErrorMessage from "@/components/molecules/ErrorMessage/ErrorMessage"
-import Spinner from "@/icons/spinner"
-import ShippingAddress from "@/components/organisms/ShippingAddress/ShippingAddress"
-import { CheckCircleSolid } from "@medusajs/icons"
-import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
+import { useActionState, useEffect } from 'react';
+
+import { HttpTypes } from '@medusajs/types';
+import { useToggleState } from '@medusajs/ui';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+
+import { Button } from '@/components/atoms';
+import ErrorMessage from '@/components/molecules/ErrorMessage/ErrorMessage';
+import LocalizedClientLink from '@/components/molecules/LocalizedLink/LocalizedLink';
+import ShippingAddress from '@/components/organisms/ShippingAddress/ShippingAddress';
+import { TickThinIcon } from '@/icons';
+import Spinner from '@/icons/spinner';
+import { setAddresses } from '@/lib/data/cart';
+import compareAddresses from '@/lib/helpers/compare-addresses';
 
 export const CartAddressSection = ({
   cart,
-  customer,
+  customer
 }: {
-  cart: HttpTypes.StoreCart | null
-  customer: HttpTypes.StoreCustomer | null
+  cart: HttpTypes.StoreCart | null;
+  customer: HttpTypes.StoreCustomer | null;
 }) => {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const pathname = usePathname()
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const isAddress = Boolean(
     cart?.shipping_address &&
-      cart?.shipping_address.first_name &&
-      cart?.shipping_address.last_name &&
-      cart?.shipping_address.address_1 &&
-      cart?.shipping_address.city &&
-      cart?.shipping_address.postal_code &&
-      cart?.shipping_address.country_code
-  )
-  const isOpen = searchParams.get("step") === "address" || !isAddress
+    cart?.shipping_address.first_name &&
+    cart?.shipping_address.last_name &&
+    cart?.shipping_address.address_1 &&
+    cart?.shipping_address.city &&
+    cart?.shipping_address.postal_code &&
+    cart?.shipping_address.country_code
+  );
+  const isOpen = searchParams.get('step') === 'address' || !isAddress;
 
   const { state: sameAsBilling, toggle: toggleSameAsBilling } = useToggleState(
     cart?.shipping_address && cart?.billing_address
       ? compareAddresses(cart?.shipping_address, cart?.billing_address)
       : true
-  )
+  );
 
-  const [message, formAction] = useActionState(setAddresses, sameAsBilling)
+  const [message, formAction] = useActionState(setAddresses, sameAsBilling);
 
   useEffect(() => {
     if (!isAddress) {
-      router.replace(pathname + "?step=address")
+      router.replace(pathname + '?step=address');
     }
-  }, [isAddress])
+  }, [isAddress]);
 
   const handleEdit = () => {
-    router.replace(pathname + "?step=address")
-  }
+    router.replace(pathname + '?step=address');
+  };
 
   return (
-    <div className="border p-4 rounded-sm bg-ui-bg-interactive" data-testid="checkout-step-address">
-      <div className="flex flex-row items-center justify-between mb-6">
-        <Heading
-          level="h2"
-          className="flex flex-row text-3xl-regular gap-x-2 items-baseline items-center"
-        >
-          {!isOpen && <CheckCircleSolid />} Shipping Address
-        </Heading>
+    <div
+      className="overflow-hidden rounded-sm border"
+      data-testid="checkout-step-address"
+    >
+      <div className="flex items-center justify-between bg-component-secondary p-4">
+        <div className="flex items-center gap-2">
+          {!isOpen && isAddress ? (
+            <span className="flex w-10 shrink-0 justify-center">
+              <TickThinIcon size={24} />
+            </span>
+          ) : (
+            <span className="heading-md w-10 shrink-0 text-center text-primary">1</span>
+          )}
+          <span className="heading-md uppercase text-primary">SHIPPING ADDRESS</span>
+        </div>
         {!isOpen && isAddress && (
-          <Text>
-            <Button onClick={handleEdit} variant="tonal" data-testid="checkout-address-edit-button">
-              Edit
-            </Button>
-          </Text>
+          <Button
+            onClick={handleEdit}
+            variant="tonal"
+            data-testid="checkout-address-edit-button"
+          >
+            EDIT
+          </Button>
         )}
       </div>
       <form
-        action={async (data) => {
-          await formAction(data)
-          router.replace(`${pathname}?step=delivery`)
-          router.refresh()
+        action={async data => {
+          await formAction(data);
+          router.replace(`${pathname}?step=delivery`);
+          router.refresh();
         }}
       >
         {isOpen ? (
-          <div className="pb-8">
+          <div className="border-t border-primary p-4 pb-8">
             <ShippingAddress
               customer={customer}
               checked={sameAsBilling}
@@ -93,31 +104,28 @@ export const CartAddressSection = ({
               Save
             </Button>
             <ErrorMessage
-              error={message !== "success" && message}
+              error={message !== 'success' && message}
               data-testid="address-error-message"
             />
           </div>
         ) : (
-          <div>
+          <div className="border-t border-primary p-4">
             <div className="text-small-regular">
               {cart && cart.shipping_address ? (
                 <div className="flex items-start gap-x-8">
-                  <div className="flex items-start gap-x-1 w-full">
+                  <div className="flex w-full items-start gap-x-1">
                     <div>
-                      <Text className="txt-medium-plus font-bold">
-                        {cart.shipping_address.first_name}{" "}
-                        {cart.shipping_address.last_name}
-                      </Text>
-                      <Text>
-                        {cart.shipping_address.address_1}{" "}
-                        {cart.shipping_address.address_2},{" "}
-                        {cart.shipping_address.postal_code}{" "}
-                        {cart.shipping_address.city},{" "}
+                      <p className="label-md font-bold">
+                        {cart.shipping_address.first_name} {cart.shipping_address.last_name}
+                      </p>
+                      <p className="label-md">
+                        {cart.shipping_address.address_1} {cart.shipping_address.address_2},{' '}
+                        {cart.shipping_address.postal_code} {cart.shipping_address.city},{' '}
                         {cart.shipping_address.country_code?.toUpperCase()}
-                      </Text>
-                      <Text>
+                      </p>
+                      <p className="label-md">
                         {cart.email}, {cart.shipping_address.phone}
-                      </Text>
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -129,14 +137,14 @@ export const CartAddressSection = ({
             </div>
           </div>
         )}
-        {isAddress && !searchParams.get("step") && (
-          <LocalizedClientLink href="/checkout?step=delivery">
-            <Button className="mt-6" variant="tonal">
-              Continue to Delivery
-            </Button>
-          </LocalizedClientLink>
+        {isAddress && !searchParams.get('step') && (
+          <div className="border-t border-primary px-4 pb-4 pt-4">
+            <LocalizedClientLink href="/checkout?step=delivery">
+              <Button variant="tonal">Continue to Delivery</Button>
+            </LocalizedClientLink>
+          </div>
         )}
       </form>
     </div>
-  )
-}
+  );
+};
