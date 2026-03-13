@@ -1,15 +1,17 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { useActionState, useEffect, useRef } from 'react';
 
 import { HttpTypes } from '@medusajs/types';
 import { useToggleState } from '@medusajs/ui';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
-import { Button } from '@/components/atoms';
+import { Button, Divider } from '@/components/atoms';
 import ErrorMessage from '@/components/molecules/ErrorMessage/ErrorMessage';
 import LocalizedClientLink from '@/components/molecules/LocalizedLink/LocalizedLink';
-import ShippingAddress from '@/components/organisms/ShippingAddress/ShippingAddress';
+import ShippingAddress, {
+  ShippingAddressHandle
+} from '@/components/organisms/ShippingAddress/ShippingAddress';
 import { TickThinIcon } from '@/icons';
 import Spinner from '@/icons/spinner';
 import { setAddresses } from '@/lib/data/cart';
@@ -42,6 +44,8 @@ export const CartAddressSection = ({
       ? compareAddresses(cart?.shipping_address, cart?.billing_address)
       : true
   );
+
+  const shippingRef = useRef<ShippingAddressHandle>(null);
 
   const [message, formAction] = useActionState(setAddresses, sameAsBilling);
 
@@ -82,31 +86,43 @@ export const CartAddressSection = ({
         )}
       </div>
       <form
+        noValidate
         action={async data => {
           await formAction(data);
           router.replace(`${pathname}?step=delivery`);
           router.refresh();
         }}
+        onSubmit={e => {
+          if (!shippingRef.current?.validate()) {
+            e.preventDefault();
+          }
+        }}
       >
         {isOpen ? (
-          <div className="border-t border-primary p-4 pb-8">
-            <ShippingAddress
-              customer={customer}
-              checked={sameAsBilling}
-              onChange={toggleSameAsBilling}
-              cart={cart}
-            />
-            <Button
-              className="mt-6"
-              data-testid="submit-address-button"
-              variant="tonal"
-            >
-              Save
-            </Button>
-            <ErrorMessage
-              error={message !== 'success' && message}
-              data-testid="address-error-message"
-            />
+          <div className="border-t border-primary">
+            <div className="p-4">
+              <ShippingAddress
+                ref={shippingRef}
+                customer={customer}
+                checked={sameAsBilling}
+                onChange={toggleSameAsBilling}
+                cart={cart}
+              />
+            </div>
+            <Divider />
+            <div className="p-4">
+              <Button
+                className="w-full"
+                data-testid="submit-address-button"
+                variant="filled"
+              >
+                PROCEED TO DELIVERY
+              </Button>
+              <ErrorMessage
+                error={message !== 'success' && message}
+                data-testid="address-error-message"
+              />
+            </div>
           </div>
         ) : (
           <div className="border-t border-primary p-4">
@@ -138,9 +154,14 @@ export const CartAddressSection = ({
           </div>
         )}
         {isAddress && !searchParams.get('step') && (
-          <div className="border-t border-primary px-4 pb-4 pt-4">
+          <div className="border-t border-primary p-4">
             <LocalizedClientLink href="/checkout?step=delivery">
-              <Button variant="tonal">Continue to Delivery</Button>
+              <Button
+                variant="filled"
+                className="w-full"
+              >
+                Continue to Delivery
+              </Button>
             </LocalizedClientLink>
           </div>
         )}
