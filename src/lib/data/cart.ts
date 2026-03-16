@@ -334,54 +334,52 @@ export async function deletePromotionCode(promoId: string) {
     .catch(medusaError);
 }
 
-// TODO: Pass a POJO instead of a form entity here
-export async function setAddresses(currentState: unknown, formData: FormData) {
+type AddressFields = {
+  first_name: string;
+  last_name: string;
+  address_1: string;
+  company: string;
+  postal_code: string;
+  city: string;
+  country_code: string;
+  province: string;
+  phone: string;
+};
+
+export type SetAddressesPayload = {
+  shipping_address: AddressFields;
+  email: string;
+  same_as_billing: boolean;
+  billing_address?: AddressFields & { tax_id?: string };
+};
+
+export async function setAddresses(payload: SetAddressesPayload): Promise<string | void> {
   try {
-    if (!formData) {
-      throw new Error('No form data found when setting addresses');
-    }
     const cartId = getCartId();
     if (!cartId) {
       throw new Error('No existing cart found when setting addresses');
     }
 
     const data = {
-      shipping_address: {
-        first_name: formData.get('shipping_address.first_name'),
-        last_name: formData.get('shipping_address.last_name'),
-        address_1: formData.get('shipping_address.address_1'),
-        address_2: '',
-        company: formData.get('shipping_address.company'),
-        postal_code: formData.get('shipping_address.postal_code'),
-        city: formData.get('shipping_address.city'),
-        country_code: formData.get('shipping_address.country_code'),
-        province: formData.get('shipping_address.province'),
-        phone: formData.get('shipping_address.phone')
-      },
-      email: formData.get('email')
-    } as any;
+      shipping_address: { ...payload.shipping_address, address_2: '' },
+      billing_address: {},
+      email: payload.email
+    };
 
-    const sameAsBilling = formData.get('same_as_billing');
-    if (sameAsBilling === 'on') {
+    if (payload.same_as_billing) {
       data.billing_address = data.shipping_address;
-    } else {
+    } else if (payload.billing_address) {
+      const { tax_id, ...billingAddr } = payload.billing_address;
       data.billing_address = {
-        first_name: formData.get('billing_address.first_name'),
-        last_name: formData.get('billing_address.last_name'),
-        address_1: formData.get('billing_address.address_1'),
+        ...billingAddr,
         address_2: '',
-        company: formData.get('billing_address.company'),
-        postal_code: formData.get('billing_address.postal_code'),
-        city: formData.get('billing_address.city'),
-        country_code: formData.get('billing_address.country_code'),
-        province: formData.get('billing_address.province'),
-        phone: formData.get('billing_address.phone'),
-        metadata: { tax_id: formData.get('billing_address.tax_id') }
+        metadata: { tax_id }
       };
     }
 
     await updateCart(data);
-    await revalidatePath('/cart');
+    const cartCacheTag = await getCacheTag('carts');
+    revalidateTag(cartCacheTag);
   } catch (e: any) {
     return e.message;
   }

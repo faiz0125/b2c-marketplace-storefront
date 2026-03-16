@@ -9,17 +9,18 @@ import React, {
 } from 'react';
 
 import { HttpTypes } from '@medusajs/types';
-import { useRouter } from 'next/navigation';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { z } from 'zod';
 
 import { Button, Checkbox, Divider, Input } from '@/components/atoms';
+import CountrySelect from '@/components/cells/CountrySelect/CountrySelect';
 import { AddressForm, Modal } from '@/components/molecules';
 import { AddressFormData } from '@/components/molecules/AddressForm/schema';
-import CountrySelect from '@/components/cells/CountrySelect/CountrySelect';
-import { deleteCustomerAddress } from '@/lib/data/customer';
-import { cn } from '@/lib/utils';
 import { MeatballsMenuIcon, PlusIcon } from '@/icons';
+import { SetAddressesPayload } from '@/lib/data/cart';
+import { deleteCustomerAddress } from '@/lib/data/customer';
+import compareAddresses from '@/lib/helpers/compare-addresses';
+import { cn } from '@/lib/utils';
 
 const shippingSchema = z.object({
   'shipping_address.first_name': z.string().min(1, 'Please enter first name'),
@@ -44,6 +45,7 @@ const billingSchema = z.object({
 
 export type ShippingAddressHandle = {
   validate: () => boolean;
+  getAddressData: () => SetAddressesPayload;
 };
 
 type AddressCardProps = {
@@ -63,9 +65,7 @@ function RadioIndicator({ selected }: { selected: boolean }) {
       <div
         className={cn(
           'flex size-5 items-center justify-center rounded-full',
-          selected
-            ? 'border border-action'
-            : 'border border-secondary bg-component-secondary'
+          selected ? 'border border-action' : 'border border-secondary bg-component-secondary'
         )}
       >
         {selected && <div className="size-3 rounded-full bg-action" />}
@@ -112,8 +112,7 @@ function AddressCard({
       <div className="label-md min-w-0 flex-1 text-secondary">
         <p>{address.address_1}</p>
         <p>
-          {address.postal_code}, {address.city},{' '}
-          {address.country_code?.toUpperCase()}
+          {address.postal_code}, {address.city}, {address.country_code?.toUpperCase()}
         </p>
       </div>
       <div className="label-md min-w-0 flex-1 overflow-hidden text-secondary">
@@ -193,11 +192,9 @@ const ShippingAddress = forwardRef<
     const addrs = getAddressesInRegionOnce();
     if (!addrs.length) return null;
     const cartAddr = cart?.shipping_address;
-    if (cartAddr?.address_1) {
-      const match = addrs.find(
-        a => a.address_1 === cartAddr.address_1 && a.postal_code === cartAddr.postal_code
-      );
-      if (match?.id) return match.id;
+    if (cartAddr) {
+      const match = addrs.find(a => compareAddresses(a, cartAddr));
+      return match?.id ?? null;
     }
     return addrs[0]?.id ?? null;
   };
@@ -223,11 +220,11 @@ const ShippingAddress = forwardRef<
     const addrs = getAddressesInRegionOnce();
     if (addrs.length) {
       const cartAddrMatch = cart?.shipping_address?.address_1
-        ? addrs.find(
+        ? (addrs.find(
             a =>
               a.address_1 === cart.shipping_address?.address_1 &&
               a.postal_code === cart.shipping_address?.postal_code
-          ) ?? addrs[0]
+          ) ?? addrs[0])
         : addrs[0];
       return {
         'shipping_address.first_name': cartAddrMatch.first_name || '',
@@ -348,9 +345,7 @@ const ShippingAddress = forwardRef<
     [customer?.email]
   );
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
@@ -362,6 +357,22 @@ const ShippingAddress = forwardRef<
       ...billingFormData,
       [e.target.name]: e.target.value
     });
+  };
+
+  const handleSameAsBillingChange = () => {
+    setBillingFormData({
+      'billing_address.first_name': '',
+      'billing_address.last_name': '',
+      'billing_address.address_1': '',
+      'billing_address.company': '',
+      'billing_address.tax_id': '',
+      'billing_address.postal_code': '',
+      'billing_address.city': '',
+      'billing_address.country_code': locale,
+      'billing_address.province': '',
+      'billing_address.phone': ''
+    });
+    onChange();
   };
 
   const handleDeleteAddress = async () => {
@@ -381,9 +392,7 @@ const ShippingAddress = forwardRef<
     if (!billingResult.success) {
       const fieldErrors = billingResult.error.flatten().fieldErrors;
       setBillingErrors(
-        Object.fromEntries(
-          Object.entries(fieldErrors).map(([key, msgs]) => [key, msgs?.[0] ?? ''])
-        )
+        Object.fromEntries(Object.entries(fieldErrors).map(([key, msgs]) => [key, msgs?.[0] ?? '']))
       );
       return false;
     }
@@ -426,6 +435,37 @@ const ShippingAddress = forwardRef<
         }
 
         return isValid;
+      },
+      getAddressData(): SetAddressesPayload {
+        return {
+          shipping_address: {
+            first_name: formData['shipping_address.first_name'],
+            last_name: formData['shipping_address.last_name'],
+            address_1: formData['shipping_address.address_1'],
+            company: formData['shipping_address.company'],
+            postal_code: formData['shipping_address.postal_code'],
+            city: formData['shipping_address.city'],
+            country_code: formData['shipping_address.country_code'],
+            province: formData['shipping_address.province'],
+            phone: formData['shipping_address.phone']
+          },
+          email: formData['email'],
+          same_as_billing: checked,
+          billing_address: checked
+            ? undefined
+            : {
+                first_name: billingFormData['billing_address.first_name'],
+                last_name: billingFormData['billing_address.last_name'],
+                address_1: billingFormData['billing_address.address_1'],
+                company: billingFormData['billing_address.company'],
+                postal_code: billingFormData['billing_address.postal_code'],
+                city: billingFormData['billing_address.city'],
+                country_code: billingFormData['billing_address.country_code'],
+                province: billingFormData['billing_address.province'],
+                phone: billingFormData['billing_address.phone'],
+                tax_id: billingFormData['billing_address.tax_id']
+              }
+        };
       }
     }),
     [formData, billingFormData, checked, isLoggedInWithAddresses, showAddForm, selectedAddressId]
@@ -676,7 +716,21 @@ const ShippingAddress = forwardRef<
             <Button
               type="button"
               variant="tonal"
-              onClick={() => setShowAddForm(true)}
+              onClick={() => {
+                setFormData({
+                  'shipping_address.first_name': '',
+                  'shipping_address.last_name': '',
+                  'shipping_address.address_1': '',
+                  'shipping_address.company': '',
+                  'shipping_address.postal_code': '',
+                  'shipping_address.city': '',
+                  'shipping_address.country_code': locale,
+                  'shipping_address.province': '',
+                  'shipping_address.phone': '',
+                  email: customer?.email || ''
+                });
+                setShowAddForm(true);
+              }}
             >
               <span className="flex items-center gap-2">
                 <PlusIcon size={16} />
@@ -697,9 +751,7 @@ const ShippingAddress = forwardRef<
                 selected={selectedAddressId === address.id}
                 menuOpen={menuOpenId === address.id}
                 onSelect={() => handleSelectAddress(address)}
-                onMenuToggle={() =>
-                  setMenuOpenId(menuOpenId === address.id ? null : address.id)
-                }
+                onMenuToggle={() => setMenuOpenId(menuOpenId === address.id ? null : address.id)}
                 onEdit={() => {
                   setEditingAddress(address);
                   setMenuOpenId(null);
@@ -710,24 +762,7 @@ const ShippingAddress = forwardRef<
                 }}
               />
             ))}
-            {selectionError && (
-              <p className="label-sm text-negative">{selectionError}</p>
-            )}
-            {/* Hidden inputs so parent form action receives the selected address data */}
-            {selectedAddressId && (
-              <>
-                <input type="hidden" name="shipping_address.first_name" value={formData['shipping_address.first_name']} />
-                <input type="hidden" name="shipping_address.last_name" value={formData['shipping_address.last_name']} />
-                <input type="hidden" name="shipping_address.address_1" value={formData['shipping_address.address_1']} />
-                <input type="hidden" name="shipping_address.company" value={formData['shipping_address.company']} />
-                <input type="hidden" name="shipping_address.postal_code" value={formData['shipping_address.postal_code']} />
-                <input type="hidden" name="shipping_address.city" value={formData['shipping_address.city']} />
-                <input type="hidden" name="shipping_address.country_code" value={formData['shipping_address.country_code']} />
-                <input type="hidden" name="shipping_address.province" value={formData['shipping_address.province']} />
-                <input type="hidden" name="shipping_address.phone" value={formData['shipping_address.phone']} />
-                <input type="hidden" name="email" value={formData['email']} />
-              </>
-            )}
+            {selectionError && <p className="label-sm text-negative">{selectionError}</p>}
           </div>
         ) : (
           /* Inline add form */
@@ -739,7 +774,7 @@ const ShippingAddress = forwardRef<
             name="same_as_billing"
             label="Billing address same as shipping address"
             checked={checked}
-            onChange={() => onChange()}
+            onChange={handleSameAsBillingChange}
           />
         </div>
         {!checked && billingForm}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { HttpTypes } from '@medusajs/types';
 import { useToggleState } from '@medusajs/ui';
@@ -16,6 +16,14 @@ import { TickThinIcon } from '@/icons';
 import Spinner from '@/icons/spinner';
 import { setAddresses } from '@/lib/data/cart';
 import compareAddresses from '@/lib/helpers/compare-addresses';
+
+const isAddressPopulated = address => {
+  if (!address || typeof address !== 'object') return false;
+
+  const requiredFields = ['first_name', 'last_name', 'address_1', 'city'];
+
+  return requiredFields.some(field => address[field] !== null && address[field]?.trim() !== '');
+};
 
 export const CartAddressSection = ({
   cart,
@@ -40,14 +48,27 @@ export const CartAddressSection = ({
   const isOpen = searchParams.get('step') === 'address' || !isAddress;
 
   const { state: sameAsBilling, toggle: toggleSameAsBilling } = useToggleState(
-    cart?.shipping_address && cart?.billing_address
-      ? compareAddresses(cart?.shipping_address, cart?.billing_address)
-      : true
+    !cart?.billing_address || compareAddresses(cart.shipping_address, cart.billing_address)
   );
 
   const shippingRef = useRef<ShippingAddressHandle>(null);
 
-  const [message, formAction] = useActionState(setAddresses, sameAsBilling);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, setIsPending] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!shippingRef.current?.validate()) return;
+    const data = shippingRef.current.getAddressData();
+    setIsPending(true);
+    const result = await setAddresses(data);
+    setIsPending(false);
+    if (result) {
+      setError(result);
+      return;
+    }
+    router.replace(`${pathname}?step=delivery`);
+    router.refresh();
+  };
 
   useEffect(() => {
     if (!isAddress) {
@@ -87,15 +108,9 @@ export const CartAddressSection = ({
       </div>
       <form
         noValidate
-        action={async data => {
-          await formAction(data);
-          router.replace(`${pathname}?step=delivery`);
-          router.refresh();
-        }}
         onSubmit={e => {
-          if (!shippingRef.current?.validate()) {
-            e.preventDefault();
-          }
+          e.preventDefault();
+          handleSubmit();
         }}
       >
         {isOpen ? (
@@ -115,11 +130,12 @@ export const CartAddressSection = ({
                 className="w-full"
                 data-testid="submit-address-button"
                 variant="filled"
+                disabled={isPending}
               >
                 PROCEED TO DELIVERY
               </Button>
               <ErrorMessage
-                error={message !== 'success' && message}
+                error={error}
                 data-testid="address-error-message"
               />
             </div>
@@ -140,9 +156,10 @@ export const CartAddressSection = ({
                 <div className="rounded-sm p-3">
                   <p className="label-md text-primary">Billing address</p>
                   <p className="label-md text-secondary">
-                    {sameAsBilling
+                    {!cart.billing_address ||
+                    compareAddresses(cart.shipping_address, cart.billing_address)
                       ? 'Same as shipping address'
-                      : cart.billing_address
+                      : isAddressPopulated(cart.billing_address)
                         ? `${cart.billing_address.first_name} ${cart.billing_address.last_name}, ${cart.billing_address.address_1}, ${cart.billing_address.postal_code} ${cart.billing_address.city}, ${cart.billing_address.country_code?.toUpperCase()}`
                         : ''}
                   </p>
