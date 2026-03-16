@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useTransition, type FC } from 'react';
+import { useEffect, useMemo, useState, useTransition, type FC } from 'react';
 
 import type { HttpTypes } from '@medusajs/types';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -64,23 +64,29 @@ const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShipping
 
   const isOpen = searchParams.get('step') === 'delivery';
 
-  const shippingOptions = availableShippingMethods?.filter(
-    sm => sm.rules?.find((rule: any) => rule.attribute === 'is_return')?.value !== 'true'
+  const shippingOptions = useMemo(
+    () =>
+      availableShippingMethods?.filter(
+        sm => sm.rules?.find((rule: any) => rule.attribute === 'is_return')?.value !== 'true'
+      ),
+    [availableShippingMethods]
   );
 
-  const groupedBySeller = (shippingOptions ?? []).reduce<Record<string, ShippingOption[]>>(
-    (acc, method) => {
-      const sellerId = method.seller_id;
-      if (!sellerId) return acc;
-      if (!acc[sellerId]) acc[sellerId] = [];
-      acc[sellerId]!.push(method);
-      return acc;
-    },
-    {}
+  const groupedBySeller = useMemo(
+    () =>
+      (shippingOptions ?? []).reduce<Record<string, ShippingOption[]>>((acc, method) => {
+        const sellerId = method.seller_id;
+        if (!sellerId) return acc;
+        if (!acc[sellerId]) acc[sellerId] = [];
+        acc[sellerId]!.push(method);
+        return acc;
+      }, {}),
+    [shippingOptions]
   );
 
-  const sellerIds = Object.keys(groupedBySeller).filter(
-    id => groupedBySeller[id]?.[0]?.seller_name
+  const sellerIds = useMemo(
+    () => Object.keys(groupedBySeller).filter(id => groupedBySeller[id]?.[0]?.seller_name),
+    [groupedBySeller]
   );
 
   // Pre-fill selections from cart's existing shipping methods
@@ -99,7 +105,7 @@ const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShipping
     if (Object.keys(preSelected).length > 0) {
       setSelectedMethodsBySeller(preSelected);
     }
-  }, [cart.shipping_methods]);
+  }, [cart.shipping_methods, sellerIds, groupedBySeller]);
 
   // Calculate prices for "calculated" type options
   useEffect(() => {

@@ -4,11 +4,10 @@ import { useEffect, useRef, useState } from 'react';
 
 import { HttpTypes } from '@medusajs/types';
 import { useToggleState } from '@medusajs/ui';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 import { Button, Divider } from '@/components/atoms';
 import ErrorMessage from '@/components/molecules/ErrorMessage/ErrorMessage';
-import LocalizedClientLink from '@/components/molecules/LocalizedLink/LocalizedLink';
 import ShippingAddress, {
   ShippingAddressHandle
 } from '@/components/organisms/ShippingAddress/ShippingAddress';
@@ -32,7 +31,6 @@ export const CartAddressSection = ({
   cart: HttpTypes.StoreCart | null;
   customer: HttpTypes.StoreCustomer | null;
 }) => {
-  const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -177,18 +175,6 @@ export const CartAddressSection = ({
                 <Spinner />
               </div>
             )}
-          </div>
-        )}
-        {isAddress && !searchParams.get('step') && (
-          <div className="border-t border-primary p-4">
-            <LocalizedClientLink href="/checkout?step=delivery">
-              <Button
-                variant="filled"
-                className="w-full"
-              >
-                Continue to Delivery
-              </Button>
-            </LocalizedClientLink>
           </div>
         )}
       </form>
