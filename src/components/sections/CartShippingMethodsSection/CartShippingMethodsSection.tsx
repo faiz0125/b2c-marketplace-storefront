@@ -87,7 +87,22 @@ const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShipping
     [shippingOptions]
   );
 
-  const sellerIds = useMemo(() => Object.keys(groupedBySeller), [groupedBySeller]);
+  const hasAdminItems = useMemo(
+    () =>
+      (cart.items ?? []).some(
+        (item: any) => item.variant_managed_by === 'admin' || !item.product?.seller
+      ),
+    [cart.items]
+  );
+
+  const sellerIds = useMemo(
+    () =>
+      Object.keys(groupedBySeller).filter(sellerId => {
+        if (sellerId === FLEEK_KEY) return hasAdminItems;
+        return true;
+      }),
+    [groupedBySeller, hasAdminItems]
+  );
 
   // Pre-fill selections from cart's existing shipping methods
   useEffect(() => {
@@ -130,6 +145,16 @@ const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShipping
     });
   }, [availableShippingMethods, cart.id]);
 
+  const hasShipping = (cart.shipping_methods?.length ?? 0) > 0;
+
+  const isAddressComplete = Boolean(cart.shipping_address?.id);
+
+  useEffect(() => {
+    if (isAddressComplete && !hasShipping && !isOpen && !isEditOpen) {
+      router.replace(pathname + '?step=delivery');
+    }
+  }, [isAddressComplete, hasShipping, isOpen, isEditOpen, router, pathname]);
+
   useEffect(() => {
     setError(null);
     setShowValidation(false);
@@ -141,8 +166,14 @@ const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShipping
     return convertToLocale({ amount, currency_code: cart.currency_code });
   };
 
-  const getItemsForSeller = (sellerId: string): CartItem[] =>
-    (cart.items ?? []).filter(item => item.product?.seller?.id === sellerId);
+  const getItemsForSeller = (sellerId: string): CartItem[] => {
+    if (sellerId === FLEEK_KEY) {
+      return (cart.items ?? []).filter(
+        (item: any) => item.variant_managed_by === 'admin' || !item.product?.seller
+      );
+    }
+    return (cart.items ?? []).filter(item => item.product?.seller?.id === sellerId);
+  };
 
   const handleSelectMethod = (sellerId: string, optionId: string) => {
     setSelectedMethodsBySeller(prev => ({ ...prev, [sellerId]: optionId }));
@@ -188,7 +219,6 @@ const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShipping
     });
   };
 
-  const hasShipping = (cart.shipping_methods?.length ?? 0) > 0;
   const isDeliveryCompleted = !isOpen && hasShipping;
 
   return (

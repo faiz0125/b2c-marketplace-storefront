@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { RadioGroup } from '@headlessui/react';
 import { Text } from '@medusajs/ui';
 
-import { Button } from '@/components/atoms';
 import ErrorMessage from '@/components/molecules/ErrorMessage/ErrorMessage';
 import { initiatePaymentSession } from '@/lib/data/cart';
 
@@ -45,6 +44,10 @@ const CartPaymentSection = ({
     setError(null);
     setSelectionError(false);
     setSelectedPaymentMethod(method);
+    const checkActiveSession = activeSession?.provider_id === method;
+    if (!isStripeFunc(method) && checkActiveSession) {
+      return;
+    }
     try {
       await initiatePaymentSession(cart, {
         provider_id: method
