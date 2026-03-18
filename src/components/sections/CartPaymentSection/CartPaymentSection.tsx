@@ -7,7 +7,6 @@ import { Text } from '@medusajs/ui';
 import { useSearchParams } from 'next/navigation';
 
 import ErrorMessage from '@/components/molecules/ErrorMessage/ErrorMessage';
-import { TickThinIcon } from '@/icons';
 import { initiatePaymentSession } from '@/lib/data/cart';
 
 import { isStripe as isStripeFunc, paymentInfoMap } from '../../../lib/constants';
@@ -36,8 +35,6 @@ const CartPaymentSection = ({
   const activeSession = cart.payment_collection?.payment_sessions?.find(
     (paymentSession: any) => paymentSession.status === 'pending'
   );
-
-  const isPaymentCompleted = !isOpen && Boolean(activeSession);
 
   const [error, setError] = useState<string | null>(null);
   const [selectionError, setSelectionError] = useState(false);
@@ -73,13 +70,7 @@ const CartPaymentSection = ({
     >
       <div className="flex items-center justify-between bg-component-secondary p-4">
         <div className="flex items-center gap-2">
-          {isPaymentCompleted ? (
-            <span className="flex w-10 shrink-0 justify-center">
-              <TickThinIcon size={24} />
-            </span>
-          ) : (
-            <span className="heading-md w-10 shrink-0 text-center text-primary">3</span>
-          )}
+          <span className="heading-md w-10 shrink-0 text-center text-primary">3</span>
           <span className="heading-md uppercase text-primary">PAYMENT</span>
         </div>
       </div>
@@ -137,19 +128,6 @@ const CartPaymentSection = ({
             error={error}
             data-testid="payment-method-error-message"
           />
-        </div>
-      )}
-
-      {isPaymentCompleted && (
-        <div className="border-t border-primary p-2">
-          <div className="rounded-sm p-3">
-            <p className="label-md text-primary">Payment method</p>
-            <p className="label-md text-secondary">
-              {paidByGiftcard
-                ? 'Gift card'
-                : (paymentInfoMap[activeSession?.provider_id]?.title ?? activeSession?.provider_id)}
-            </p>
-          </div>
         </div>
       )}
     </div>
