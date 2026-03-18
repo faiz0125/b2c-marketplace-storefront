@@ -36,7 +36,7 @@ export const Cart = ({ user, wishlist }: { user?: Customer; wishlist?: Wishlist 
             tax={cart?.tax_total || 0}
             discount_total={cart?.discount_subtotal || 0}
           />
-          <LocalizedClientLink href="/checkout?step=address">
+          <LocalizedClientLink href="/checkout">
             <Button className="mt-4 flex w-full items-center justify-center py-3 font-normal uppercase">
               Proceed to checkout
             </Button>

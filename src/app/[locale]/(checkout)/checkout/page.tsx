@@ -13,6 +13,7 @@ import { retrieveCustomer } from '@/lib/data/customer';
 import { listCartShippingMethods } from '@/lib/data/fulfillment';
 import { listCartPaymentMethods } from '@/lib/data/payment';
 import isAddressComplete from '@/lib/helpers/is-address-complete';
+import { isDeliveryComplete } from '@/lib/helpers/is-delivery-complete';
 
 export const metadata: Metadata = {
   title: 'Checkout',
@@ -48,18 +49,16 @@ async function CheckoutPageContent({ searchParams }: { searchParams: Promise<{ s
   }
 
   const { step } = await searchParams;
-  const addressComplete = isAddressComplete(cart.shipping_address);
-  const hasShipping = (cart.shipping_methods?.length ?? 0) > 0;
-
-  if (!addressComplete && step !== 'address') {
-    redirect('/checkout?step=address');
-  }
-
-  if (addressComplete && !hasShipping && step !== 'delivery' && step !== 'address') {
-    redirect('/checkout?step=delivery');
-  }
-
   const shippingMethods = await listCartShippingMethods(cart.id, false);
+  const addressComplete = isAddressComplete(cart.shipping_address);
+  const deliveryComplete = isDeliveryComplete(cart, shippingMethods);
+
+  if (!step) {
+    if (!addressComplete) redirect('/checkout?step=address');
+    else if (!deliveryComplete) redirect('/checkout?step=delivery');
+    else redirect('/checkout?step=payment');
+  }
+
   const paymentMethods = await listCartPaymentMethods(cart.region?.id ?? '');
   const customer = await retrieveCustomer();
 
@@ -80,7 +79,7 @@ async function CheckoutPageContent({ searchParams }: { searchParams: Promise<{ s
             />
             <CartShippingMethodsSection
               cart={cart}
-              availableShippingMethods={shippingMethods as any}
+              availableShippingMethods={shippingMethods}
             />
             <CartPaymentSection
               cart={cart}

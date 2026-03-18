@@ -30,8 +30,7 @@ export const CartAddressSection = ({
 
   const isAddress = isAddressComplete(cart?.shipping_address);
 
-  const isEditMode = isAddress && searchParams.get('step') === 'address';
-  const isOpen = !isAddress || searchParams.get('step') === 'address';
+  const isOpen = searchParams.get('step') === 'address';
 
   const { state: sameAsBilling, toggle: toggleSameAsBilling } = useToggleState(
     !cart?.billing_address || compareAddresses(cart.shipping_address, cart.billing_address)
@@ -52,13 +51,8 @@ export const CartAddressSection = ({
       setError(result);
       return;
     }
-    if (isEditMode) {
-      router.replace(pathname);
-      router.refresh();
-    } else {
-      router.replace(`${pathname}?step=delivery`);
-      router.refresh();
-    }
+    router.replace(`${pathname}?step=delivery`);
+    router.refresh();
   };
 
   const handleEdit = () => {
@@ -118,7 +112,7 @@ export const CartAddressSection = ({
                 disabled={isPending}
                 loading={isPending}
               >
-                {isEditMode ? 'SAVE' : 'PROCEED TO DELIVERY'}
+                PROCEED TO DELIVERY
               </Button>
               <ErrorMessage
                 error={error}

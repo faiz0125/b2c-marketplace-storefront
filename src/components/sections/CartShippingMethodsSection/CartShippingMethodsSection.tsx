@@ -12,14 +12,14 @@ import { calculatePriceForShippingOption } from '@/lib/data/fulfillment';
 import { FLEEK_KEY, FLEEK_NAME } from '@/lib/helpers/group-cart-items-by-seller';
 import { convertToLocale } from '@/lib/helpers/money';
 
-type ExtendedStoreProduct = HttpTypes.StoreProduct & {
+export type ExtendedStoreProduct = HttpTypes.StoreProduct & {
   seller?: {
     id: string;
     name: string;
   };
 };
 
-type CartItem = HttpTypes.StoreCartLineItem & {
+export type CartItem = HttpTypes.StoreCartLineItem & {
   product?: ExtendedStoreProduct;
   variant_managed_by?: string;
 };
@@ -34,7 +34,7 @@ export type StoreCardShippingMethod = HttpTypes.StoreCartShippingOption & {
   };
 };
 
-type ShippingOption = StoreCardShippingMethod & {
+export type ShippingOption = StoreCardShippingMethod & {
   rules: any;
   seller_id: string | null;
   seller_name?: string;
@@ -66,7 +66,7 @@ const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShipping
   const pathname = usePathname();
 
   const isOpen = searchParams.get('step') === 'delivery';
-  const [isEditOpen, setIsEditOpen] = useState(false);
+  const hasShipping = (cart.shipping_methods?.length ?? 0) > 0;
 
   const shippingOptions = useMemo(
     () =>
@@ -148,8 +148,6 @@ const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShipping
     });
   }, [availableShippingMethods, cart.id]);
 
-  const hasShipping = (cart.shipping_methods?.length ?? 0) > 0;
-
   useEffect(() => {
     setError(null);
     setShowValidation(false);
@@ -195,12 +193,7 @@ const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShipping
             return;
           }
         }
-        if (isEditOpen) {
-          setIsEditOpen(false);
-          router.replace(pathname);
-        } else {
-          router.push(pathname + '?step=payment', { scroll: false });
-        }
+        router.push(pathname + '?step=payment', { scroll: false });
         router.refresh();
       } catch (err: any) {
         setError(
@@ -215,7 +208,6 @@ const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShipping
       if (cart.shipping_methods?.length) {
         await Promise.all(cart.shipping_methods.map(sm => removeShippingMethod(sm.id)));
       }
-      setIsEditOpen(true);
       router.replace(pathname + '?step=delivery');
       router.refresh();
     });
@@ -349,7 +341,7 @@ const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShipping
                   loading={isPending}
                   data-testid="submit-delivery-button"
                 >
-                  {isEditOpen ? 'SAVE' : 'PROCEED TO PAYMENT'}
+                  PROCEED TO PAYMENT
                 </Button>
               </div>
             </>
