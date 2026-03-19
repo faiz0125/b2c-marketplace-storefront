@@ -279,19 +279,13 @@ const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShipping
                     {parcelIndex > 0 && <Divider />}
                     <div className="p-2">
                       {/* Parcel heading row */}
-                      <div className="flex flex-wrap items-center justify-between p-3 lg:flex-nowrap lg:items-start">
-                        <span className="heading-sm order-1 min-w-0 flex-1 text-primary">
+                      <div className="flex items-center p-3">
+                        <span className="heading-sm flex-1 text-primary">
                           Parcel {parcelIndex + 1}
                         </span>
-                        {sellerName && (
-                          <div className="label-md order-2 flex shrink-0 items-center gap-1 lg:order-3">
-                            <span className="text-secondary">Seller:</span>
-                            <span className="text-primary">{sellerName}</span>
-                          </div>
-                        )}
                         {items.length > 0 && (
-                          <div className="order-3 flex w-full shrink-0 gap-2 lg:order-2 lg:w-auto">
-                            {items.map(
+                          <div className="flex shrink-0 gap-2">
+                            {items.slice(0, 3).map(
                               item =>
                                 item.thumbnail && (
                                   <div
@@ -306,6 +300,17 @@ const CartShippingMethodsSection: FC<ShippingProps> = ({ cart, availableShipping
                                   </div>
                                 )
                             )}
+                            {items.length > 3 && (
+                              <div className="label-md flex size-14 shrink-0 items-center justify-center rounded-sm border bg-component-secondary text-secondary">
+                                +{items.length - 3}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {sellerName && (
+                          <div className="label-md flex flex-1 items-center justify-end gap-1">
+                            <span className="text-secondary">Seller:</span>
+                            <span className="text-primary">{sellerName}</span>
                           </div>
                         )}
                       </div>
