@@ -20,7 +20,9 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
   return (
     <main className="container">
       <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-4 md:gap-8">
-        <UserNavigation />
+        <div className="hidden md:block">
+          <UserNavigation />
+        </div>
         <div className="md:col-span-3">
           <LocalizedClientLink href="/user/orders">
             <Button

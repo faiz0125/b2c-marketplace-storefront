@@ -74,8 +74,8 @@ export const OrderProductListItem = ({
             />
           )}
         </div>
-        <div className="flex min-w-0 flex-1 items-center justify-between p-4">
-          <div className="flex min-w-0 max-w-[310px] shrink-0 flex-col items-start">
+        <div className="flex min-w-0 flex-1 flex-col gap-3 p-3 md:flex-row md:items-center md:justify-between md:p-4">
+          <div className="flex min-w-0 flex-col items-start md:max-w-[310px] md:shrink-0">
             <LocalizedClientLink
               href={`/products/${item.product_handle}`}
               target="_blank"
@@ -91,7 +91,7 @@ export const OrderProductListItem = ({
             </LocalizedClientLink>
           </div>
           {options.length > 0 && (
-            <div className="label-md flex shrink-0 flex-col items-start gap-0 whitespace-nowrap">
+            <div className="label-md flex flex-col items-start gap-0 md:shrink-0 md:whitespace-nowrap">
               {options.map(opt => (
                 <div
                   key={opt.label}
@@ -110,7 +110,7 @@ export const OrderProductListItem = ({
               Canceled
             </span>
           )}
-          <div className="flex w-[136px] shrink-0 flex-col items-end justify-center text-right">
+          <div className="flex flex-col items-start justify-center md:w-[136px] md:shrink-0 md:items-end md:text-right">
             {showOriginalPrice && (
               <p
                 className={cn(

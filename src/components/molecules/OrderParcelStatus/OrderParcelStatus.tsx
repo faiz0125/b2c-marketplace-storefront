@@ -9,11 +9,13 @@ export const OrderParcelStatus = ({ order }: { order: any }) => {
   const currentStep = parcelStatuses(order.fulfillment_status);
 
   return (
-    <div>
-      <StepProgressBar
-        steps={steps}
-        currentStep={currentStep}
-      />
+    <div className="overflow-x-auto">
+      <div className="min-w-[480px]">
+        <StepProgressBar
+          steps={steps}
+          currentStep={currentStep}
+        />
+      </div>
     </div>
   );
 };

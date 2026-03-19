@@ -100,7 +100,7 @@ export const OrderCancel = ({ order }: OrderCancelProps) => {
         </div>
         <Button
           variant="tonal"
-          className="label-md uppercase text-action-on-secondary"
+          className="label-md w-full uppercase text-action-on-secondary md:w-auto"
           onClick={() => setOpen(true)}
         >
           Cancel
