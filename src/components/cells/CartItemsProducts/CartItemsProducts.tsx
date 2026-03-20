@@ -71,7 +71,7 @@ export const CartItemsProducts = ({
                     height={80}
                     className={cn(
                       'h-[80px] w-[56px] rounded-[6px] object-cover',
-                      !product.thumbnail ? 'opacity-30' : ''
+                      !product.thumbnail && 'opacity-30'
                     )}
                   />
                 </div>
