@@ -1,6 +1,6 @@
 import { Carousel } from "@/components/cells"
 import { ProductCard } from "../ProductCard/ProductCard"
-import { listProducts } from "@/lib/data/products"
+import { sdk } from "@/lib/config"
 import { Product } from "@/types/product"
 
 export const HomeProductsCarousel = async ({
@@ -12,22 +12,26 @@ export const HomeProductsCarousel = async ({
   sellerProducts: Product[]
   home: boolean
 }) => {
-  const {
-    response: { products },
-  } = await listProducts({
-    countryCode: locale,
-    queryParams: {
-      limit: home ? 4 : undefined,
-      order: "created_at",
-      handle: home
-        ? undefined
-        : sellerProducts.map((product) => product.handle),
-    },
-    forceCache: !home,
-  })
+  let products: any[] = []
+  
+  try {
+    const region = await sdk.store.region.list()
+    const regionId = region?.regions?.[0]?.id
+    
+    if (regionId) {
+      const result = await sdk.store.product.list({
+        limit: 4,
+        region_id: regionId,
+        fields: "*variants.calculated_price,+variants.inventory_quantity,*seller,*variants",
+      })
+      products = result?.products || []
+    }
+  } catch (e) {
+    console.error("Product fetch error:", e)
+  }
 
   if (!products.length && !sellerProducts.length) return null
-
+  
   return (
     <div className="flex justify-center w-full">
       <Carousel

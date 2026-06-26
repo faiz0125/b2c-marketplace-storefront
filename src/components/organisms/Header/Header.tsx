@@ -41,30 +41,30 @@ export const Header = async ({ locale } : {
           <MobileNavbar
             parentCategories={parentCategories}
             categories={categories}
-          />
+          style={{height:"40px",width:"auto"}} alt="VoltQ" />
           <ParentCategoryLinks
             parentCategories={parentCategories}
             categories={categories}
-          />
+          style={{height:"40px",width:"auto"}} alt="VoltQ" />
         </div>
         <div className="flex lg:justify-center lg:w-1/3 items-center pl-4 lg:pl-0">
           <LocalizedClientLink href="/" className="text-2xl font-bold" data-testid="header-logo-link">
-            <Image
-              src="/Logo.svg"
+            <img
+              src="/Logo.png"
               width={126}
               height={40}
-              alt="Logo"
-              priority
-            />
+              
+              
+            style={{height:"40px",width:"auto"}} alt="VoltQ" />
           </LocalizedClientLink>
         </div>
         <div className="flex items-center justify-end gap-2 lg:gap-4 w-full lg:w-1/3 py-2" data-testid="header-actions">
-          <CountrySelector regions={regions} />
-          {isLoggedIn && <MessageButton />}
-          <UserDropdown isLoggedIn={isLoggedIn} />
+          <CountrySelector regions={regions} style={{height:"40px",width:"auto"}} alt="VoltQ" />
+          {isLoggedIn && <MessageButton style={{height:"40px",width:"auto"}} alt="VoltQ" />}
+          <UserDropdown isLoggedIn={isLoggedIn} style={{height:"40px",width:"auto"}} alt="VoltQ" />
           {isLoggedIn && (
             <LocalizedClientLink href="/user/wishlist" className="relative" data-testid="header-wishlist-link">
-              <HeartIcon size={20} />
+              <HeartIcon size={20} style={{height:"40px",width:"auto"}} alt="VoltQ" />
               {Boolean(wishlistCount) && (
                 <Badge className="absolute -top-2 -right-2 w-4 h-4 p-0" data-testid="wishlist-count-badge">
                   {wishlistCount}
@@ -73,10 +73,10 @@ export const Header = async ({ locale } : {
             </LocalizedClientLink>
           )}
 
-          <CartDropdown />
+          <CartDropdown style={{height:"40px",width:"auto"}} alt="VoltQ" />
         </div>
       </div>
-      <Navbar categories={categories} parentCategories={parentCategories} />
+      <Navbar categories={categories} parentCategories={parentCategories} style={{height:"40px",width:"auto"}} alt="VoltQ" />
     </header>
   )
 }
