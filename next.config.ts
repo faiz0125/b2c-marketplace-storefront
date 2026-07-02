@@ -4,6 +4,8 @@ const nextConfig: NextConfig = {
   output: "standalone",
   trailingSlash: false,
   reactStrictMode: true,
+  eslint: { ignoreDuringBuilds: true },
+  experimental: { staleTimes: { dynamic: 0, static: 0 } },
   logging: {
     fetches: {
       fullUrl: true

@@ -60,7 +60,7 @@ export const CustomCarousel = ({
           {items.map((slide) => slide)}
         </div>
 
-        <div className="flex justify-between items-center mt-4 sm:hidden">
+        <div className="flex justify-between items-center mt-4">
           <div className="w-1/2">
             <Indicator
               variant={variant}

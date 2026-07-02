@@ -6,14 +6,13 @@ import {
   ProductsPagination,
 } from "@/components/organisms"
 import { PRODUCT_LIMIT } from "@/const"
-import { listProductsWithSort } from "@/lib/data/products"
 
 export const ProductListing = async ({
   category_id,
   collection_id,
   seller_id,
   showSidebar = false,
-  locale = process.env.NEXT_PUBLIC_DEFAULT_REGION || "pl",
+  locale = "in",
 }: {
   category_id?: string
   collection_id?: string
@@ -21,20 +20,25 @@ export const ProductListing = async ({
   showSidebar?: boolean
   locale?: string
 }) => {
-  const { response } = await listProductsWithSort({
-    seller_id,
-    category_id,
-    collection_id,
-    countryCode: locale,
-    sortBy: "created_at",
-    queryParams: {
-      limit: PRODUCT_LIMIT,
-    },
-  })
+  let products: any[] = []
+  let count = 0
 
-  const { products } = await response
-
-  const count = products.length
+  try {
+    const res = await fetch(
+      `${process.env.MEDUSA_BACKEND_URL}/store/products?country_code=in&limit=${PRODUCT_LIMIT}&region_id=reg_01KW17GX8032DQPFZJ0JJDFJ2C&fields=*variants.calculated_price,*variants`,
+      {
+        headers: {
+          "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY!,
+        },
+        cache: "no-store",
+      }
+    )
+    const data = await res.json()
+    products = data?.products || []
+    count = data?.count || 0
+  } catch (e) {
+    console.error("ProductListing fetch error:", e)
+  }
 
   const pages = Math.ceil(count / PRODUCT_LIMIT) || 1
 
